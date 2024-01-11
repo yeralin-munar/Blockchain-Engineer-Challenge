@@ -24,6 +24,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdAllPosts())
+	cmd.AddCommand(CmdAllComments())
 
 	return cmd
 }
@@ -60,6 +61,36 @@ func CmdAllPosts() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "blog")
+
+	return cmd
+}
+
+func CmdAllComments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-comment [post_slug]",
+		Short: "list all comment",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			postSlug := args[0]
+
+			queryClient := blog.NewQueryClient(clientCtx)
+
+			params := &blog.QueryAllCommentsRequest{
+				PostSlug: postSlug,
+			}
+
+			res, err := queryClient.AllComments(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
 
 	return cmd
 }
